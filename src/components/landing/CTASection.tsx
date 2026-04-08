@@ -1,5 +1,4 @@
-import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -7,24 +6,29 @@ import patternCta from "@/assets/pattern-cta.jpg";
 
 const CTASection = () => {
   const navigate = useNavigate();
-  const sectionRef = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start end", "end start"] });
-  const bgScale = useTransform(scrollYProgress, [0, 1], [1.1, 1]);
 
   return (
-    <section ref={sectionRef} className="py-28 lg:py-36 relative overflow-hidden">
-      <motion.div className="absolute inset-0" style={{ scale: bgScale }}>
-        <img src={patternCta} alt="" className="w-full h-full object-cover" loading="lazy" width={1920} height={800} aria-hidden="true" />
+    <section className="py-28 lg:py-36 relative overflow-hidden">
+      {/* Background image */}
+      <div className="absolute inset-0">
+        <img
+          src={patternCta}
+          alt=""
+          className="w-full h-full object-cover"
+          loading="lazy"
+          width={1920}
+          height={800}
+          aria-hidden="true"
+        />
         <div className="absolute inset-0 bg-primary/85" />
-      </motion.div>
+      </div>
 
       <div className="container relative z-10 mx-auto px-6">
         <div className="grid lg:grid-cols-12 gap-12 items-center">
           <motion.div
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            viewport={{ once: true }}
             className="lg:col-span-7"
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/15 bg-white/10 mb-8">
@@ -33,11 +37,16 @@ const CTASection = () => {
             </div>
 
             <h2 className="text-4xl lg:text-6xl xl:text-7xl font-display font-bold text-white leading-[1.05] mb-6">
-              Secure.<br />Trusted.<br /><span className="text-accent">National.</span>
+              Secure.
+              <br />
+              Trusted.
+              <br />
+              <span className="text-accent">National.</span>
             </h2>
 
             <p className="text-xl text-white/70 font-body max-w-lg mb-10 leading-relaxed">
-              Join the network of institutions and citizens building transparency in Zimbabwe's vehicle ecosystem.
+              Join the network of institutions and citizens building transparency 
+              in Zimbabwe's vehicle ecosystem. 
             </p>
 
             <div className="flex flex-wrap gap-4">
@@ -62,8 +71,8 @@ const CTASection = () => {
           <motion.div
             initial={{ opacity: 0, x: 40 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ delay: 0.2, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
             className="lg:col-span-4 lg:col-start-9 hidden lg:block"
           >
             <div className="space-y-6">
@@ -78,7 +87,7 @@ const CTASection = () => {
                   initial={{ opacity: 0, x: 20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: 0.3 + i * 0.1, duration: 0.6 }}
+                  transition={{ delay: 0.3 + i * 0.1 }}
                   className="flex items-center gap-6 border-b border-white/10 pb-5 last:border-0"
                 >
                   <span className="text-4xl font-display font-bold text-accent min-w-[100px]">{stat.value}</span>
