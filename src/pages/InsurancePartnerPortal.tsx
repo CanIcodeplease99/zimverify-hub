@@ -272,6 +272,56 @@ const InsurancePartnerPortal = () => {
           </motion.div>
         </div>
       )}
+
+      {/* Current Tier & Billing */}
+      <motion.div variants={itemVariants}>
+        <Card className="border-border/40 bg-card/70 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="font-display text-lg flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" /> Your Plan & Usage
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-3 gap-4 mb-6">
+              {businessTiers.map((tier) => {
+                const isCurrent = tier.id === "professional";
+                return (
+                  <div
+                    key={tier.id}
+                    className={`p-5 rounded-xl border transition-all ${
+                      isCurrent
+                        ? "border-primary/30 bg-primary/5 ring-2 ring-primary/15"
+                        : "border-border/20 bg-muted/10 opacity-60"
+                    }`}
+                  >
+                    {isCurrent && <Badge className="mb-2 bg-primary text-primary-foreground text-xs font-body">Current Plan</Badge>}
+                    <p className="font-display font-bold text-foreground">{tier.name}</p>
+                    <p className="text-sm text-muted-foreground font-body">{tier.volumeRange}</p>
+                    <p className="text-lg font-display font-bold text-foreground mt-2">
+                      {formatUSD(tier.perReport)}<span className="text-sm font-normal text-muted-foreground">/report</span>
+                    </p>
+                    {tier.platformFee !== null && (
+                      <p className="text-xs text-muted-foreground font-body">+ {formatUSD(tier.platformFee)}/mo</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { label: "Reports This Month", value: "342" },
+                { label: "Current Bill", value: "$1,075" },
+                { label: "Next Invoice", value: "May 1, 2026" },
+              ].map((m) => (
+                <div key={m.label} className="text-center p-4 bg-muted/20 rounded-xl border border-border/20">
+                  <p className="text-xl font-display font-bold text-foreground">{m.value}</p>
+                  <p className="text-xs text-muted-foreground font-body">{m.label}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </motion.div>
   );
 };
