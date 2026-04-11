@@ -3,6 +3,33 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShieldAlert, Activity, AlertTriangle, Wifi, CheckCircle, ArrowUp, FileText, Clock, TrendingUp } from "lucide-react";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from "recharts";
+
+const caseTrends = [
+  { week: "W1", opened: 5, resolved: 3 },
+  { week: "W2", opened: 8, resolved: 6 },
+  { week: "W3", opened: 4, resolved: 7 },
+  { week: "W4", opened: 9, resolved: 5 },
+  { week: "W5", opened: 6, resolved: 8 },
+  { week: "W6", opened: 7, resolved: 7 },
+];
+
+const caseDistribution = [
+  { name: "Stolen", value: 12, color: "hsl(var(--destructive))" },
+  { name: "Mismatch", value: 8, color: "hsl(var(--warning))" },
+  { name: "Expired", value: 15, color: "hsl(var(--accent))" },
+  { name: "Routine", value: 45, color: "hsl(var(--primary))" },
+];
+
+const caseTrendConfig = {
+  opened: { label: "Opened", color: "hsl(var(--destructive))" },
+  resolved: { label: "Resolved", color: "hsl(var(--success))" },
+};
+
+const caseDistConfig = {
+  value: { label: "Cases", color: "hsl(var(--primary))" },
+};
 
 const kpis = [
   { label: "Open Cases", value: "7", icon: ShieldAlert, trend: "+2 today", color: "text-destructive" },
@@ -65,6 +92,53 @@ const PoliceConsole = () => {
             </Card>
           </motion.div>
         ))}
+      </div>
+
+      {/* Charts */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <motion.div variants={itemVariants}>
+          <Card className="border-border/40 bg-card/70 backdrop-blur-sm">
+            <CardHeader><CardTitle className="font-display text-lg">Case Trends (6 weeks)</CardTitle></CardHeader>
+            <CardContent>
+              <ChartContainer config={caseTrendConfig} className="h-[220px] w-full">
+                <LineChart data={caseTrends} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                  <XAxis dataKey="week" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Line type="monotone" dataKey="opened" stroke="hsl(var(--destructive))" strokeWidth={2} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="resolved" stroke="hsl(var(--success))" strokeWidth={2} dot={{ r: 4 }} />
+                </LineChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <Card className="border-border/40 bg-card/70 backdrop-blur-sm">
+            <CardHeader><CardTitle className="font-display text-lg">Case Distribution</CardTitle></CardHeader>
+            <CardContent>
+              <ChartContainer config={caseDistConfig} className="h-[220px] w-full">
+                <PieChart>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Pie data={caseDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} strokeWidth={2} stroke="hsl(var(--card))">
+                    {caseDistribution.map((entry, index) => (
+                      <Cell key={index} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ChartContainer>
+              <div className="flex flex-wrap justify-center gap-3 mt-2">
+                {caseDistribution.map((item) => (
+                  <div key={item.name} className="flex items-center gap-1.5 text-xs text-muted-foreground font-body">
+                    <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: item.color }} />
+                    {item.name} ({item.value})
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">

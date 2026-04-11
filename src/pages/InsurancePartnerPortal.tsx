@@ -3,7 +3,37 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "react-router-dom";
-import { FileUp, Key, BarChart3, Shield, AlertTriangle, CheckCircle, Activity, Zap, Clock, TrendingUp, Upload } from "lucide-react";
+import { FileUp, Key, Shield, AlertTriangle, Activity, Zap, Clock, TrendingUp, Upload } from "lucide-react";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line } from "recharts";
+
+const claimsOverTime = [
+  { month: "Jan", verified: 42, flagged: 5 },
+  { month: "Feb", verified: 38, flagged: 8 },
+  { month: "Mar", verified: 55, flagged: 3 },
+  { month: "Apr", verified: 48, flagged: 6 },
+  { month: "May", verified: 62, flagged: 4 },
+  { month: "Jun", verified: 58, flagged: 7 },
+];
+
+const apiUsage = [
+  { day: "Mon", requests: 1850 },
+  { day: "Tue", requests: 2100 },
+  { day: "Wed", requests: 1920 },
+  { day: "Thu", requests: 2400 },
+  { day: "Fri", requests: 2080 },
+  { day: "Sat", requests: 820 },
+  { day: "Sun", requests: 610 },
+];
+
+const claimsChartConfig = {
+  verified: { label: "Verified", color: "hsl(var(--success))" },
+  flagged: { label: "Flagged", color: "hsl(var(--destructive))" },
+};
+
+const apiChartConfig = {
+  requests: { label: "API Requests", color: "hsl(var(--accent))" },
+};
 
 const insuranceKpis = [
   { label: "Claims Linked", value: "342", icon: Shield, trend: "+18 this week", color: "text-primary" },
@@ -81,6 +111,62 @@ const InsurancePartnerPortal = () => {
             </Card>
           </motion.div>
         ))}
+      </div>
+
+      {/* Charts */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <motion.div variants={itemVariants}>
+          <Card className="border-border/40 bg-card/70 backdrop-blur-sm">
+            <CardHeader><CardTitle className="font-display text-lg">{isPartner ? "API Usage (7 days)" : "Claims Over Time"}</CardTitle></CardHeader>
+            <CardContent>
+              {isPartner ? (
+                <ChartContainer config={apiChartConfig} className="h-[220px] w-full">
+                  <BarChart data={apiUsage} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                    <XAxis dataKey="day" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                    <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="requests" fill="hsl(var(--accent))" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ChartContainer>
+              ) : (
+                <ChartContainer config={claimsChartConfig} className="h-[220px] w-full">
+                  <LineChart data={claimsOverTime} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                    <XAxis dataKey="month" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                    <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Line type="monotone" dataKey="verified" stroke="hsl(var(--success))" strokeWidth={2} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="flagged" stroke="hsl(var(--destructive))" strokeWidth={2} dot={{ r: 4 }} />
+                  </LineChart>
+                </ChartContainer>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <Card className="border-border/40 bg-card/70 backdrop-blur-sm">
+            <CardHeader><CardTitle className="font-display text-lg">{isPartner ? "Latency Trend" : "Risk Distribution"}</CardTitle></CardHeader>
+            <CardContent>
+              <ChartContainer config={apiChartConfig} className="h-[220px] w-full">
+                <BarChart
+                  data={isPartner
+                    ? apiUsage.map((d, i) => ({ ...d, latency: [38, 42, 45, 39, 44, 52, 48][i] }))
+                    : [{ risk: "Low", count: 28 }, { risk: "Medium", count: 9 }, { risk: "High", count: 4 }]
+                  }
+                  margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                  <XAxis dataKey={isPartner ? "day" : "risk"} className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey={isPartner ? "latency" : "count"} fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
 
       {!isPartner && (

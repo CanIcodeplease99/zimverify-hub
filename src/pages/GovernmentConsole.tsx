@@ -3,6 +3,35 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Activity, Database, ShieldCheck, Clock, Users, Settings, Building2, TrendingUp, CheckCircle2 } from "lucide-react";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, BarChart, Bar } from "recharts";
+
+const uptimeData = [
+  { day: "Mon", uptime: 99.98 },
+  { day: "Tue", uptime: 99.95 },
+  { day: "Wed", uptime: 100 },
+  { day: "Thu", uptime: 99.99 },
+  { day: "Fri", uptime: 99.92 },
+  { day: "Sat", uptime: 100 },
+  { day: "Sun", uptime: 99.97 },
+];
+
+const auditData = [
+  { hour: "00:00", events: 120 },
+  { hour: "04:00", events: 45 },
+  { hour: "08:00", events: 380 },
+  { hour: "12:00", events: 520 },
+  { hour: "16:00", events: 610 },
+  { hour: "20:00", events: 290 },
+];
+
+const uptimeConfig = {
+  uptime: { label: "Uptime %", color: "hsl(var(--success))" },
+};
+
+const auditConfig = {
+  events: { label: "Audit Events", color: "hsl(var(--primary))" },
+};
 
 const kpis = [
   { label: "Agency Sync", value: "Healthy", icon: Database, trend: "All systems go", color: "text-success" },
@@ -58,6 +87,49 @@ const GovernmentConsole = () => {
             </Card>
           </motion.div>
         ))}
+      </div>
+
+      {/* Charts */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <motion.div variants={itemVariants}>
+          <Card className="border-border/40 bg-card/70 backdrop-blur-sm">
+            <CardHeader><CardTitle className="font-display text-lg">System Uptime (7 days)</CardTitle></CardHeader>
+            <CardContent>
+              <ChartContainer config={uptimeConfig} className="h-[220px] w-full">
+                <AreaChart data={uptimeData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="uptimeGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                  <XAxis dataKey="day" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis domain={[99.8, 100.1]} className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Area type="monotone" dataKey="uptime" stroke="hsl(var(--success))" fill="url(#uptimeGrad)" strokeWidth={2} />
+                </AreaChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <Card className="border-border/40 bg-card/70 backdrop-blur-sm">
+            <CardHeader><CardTitle className="font-display text-lg">Audit Events Today</CardTitle></CardHeader>
+            <CardContent>
+              <ChartContainer config={auditConfig} className="h-[220px] w-full">
+                <BarChart data={auditData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                  <XAxis dataKey="hour" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="events" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
 
       <motion.div variants={itemVariants}>
