@@ -4,6 +4,32 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, Download, FileText, AlertTriangle, Eye, Wallet, ClipboardList, ArrowRight, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, BarChart, Bar } from "recharts";
+
+const checksOverTime = [
+  { month: "Jan", checks: 8 },
+  { month: "Feb", checks: 12 },
+  { month: "Mar", checks: 6 },
+  { month: "Apr", checks: 18 },
+  { month: "May", checks: 14 },
+  { month: "Jun", checks: 22 },
+  { month: "Jul", checks: 14 },
+];
+
+const statusBreakdown = [
+  { status: "Clear", count: 38 },
+  { status: "Review", count: 7 },
+  { status: "Flagged", count: 3 },
+];
+
+const checksChartConfig = {
+  checks: { label: "Checks", color: "hsl(var(--primary))" },
+};
+
+const statusChartConfig = {
+  count: { label: "Count", color: "hsl(var(--accent))" },
+};
 
 const kpis = [
   { label: "Recent Checks", value: "14", icon: ClipboardList, trend: "+3 this week", color: "text-primary" },
@@ -53,7 +79,7 @@ const PublicDashboard = () => {
             <Card className="border-border/40 bg-card/70 backdrop-blur-sm hover:shadow-lg hover:border-border/60 transition-all duration-300 hover:-translate-y-0.5">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`w-11 h-11 rounded-xl bg-primary/8 flex items-center justify-center`}>
+                  <div className="w-11 h-11 rounded-xl bg-primary/8 flex items-center justify-center">
                     <kpi.icon className={`h-5 w-5 ${kpi.color}`} />
                   </div>
                   <TrendingUp className="h-4 w-4 text-muted-foreground/40" />
@@ -67,12 +93,53 @@ const PublicDashboard = () => {
         ))}
       </div>
 
+      {/* Charts */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <motion.div variants={itemVariants}>
+          <Card className="border-border/40 bg-card/70 backdrop-blur-sm">
+            <CardHeader><CardTitle className="font-display text-lg">Checks Over Time</CardTitle></CardHeader>
+            <CardContent>
+              <ChartContainer config={checksChartConfig} className="h-[220px] w-full">
+                <AreaChart data={checksOverTime} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="checksGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                  <XAxis dataKey="month" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Area type="monotone" dataKey="checks" stroke="hsl(var(--primary))" fill="url(#checksGrad)" strokeWidth={2} />
+                </AreaChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <Card className="border-border/40 bg-card/70 backdrop-blur-sm">
+            <CardHeader><CardTitle className="font-display text-lg">Results Breakdown</CardTitle></CardHeader>
+            <CardContent>
+              <ChartContainer config={statusChartConfig} className="h-[220px] w-full">
+                <BarChart data={statusBreakdown} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                  <XAxis dataKey="status" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="count" fill="hsl(var(--accent))" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
       {/* Quick Actions */}
       <motion.div variants={itemVariants}>
         <Card className="border-border/40 bg-card/70 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="font-display text-lg">Quick Actions</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="font-display text-lg">Quick Actions</CardTitle></CardHeader>
           <CardContent className="flex flex-wrap gap-3">
             <Button onClick={() => navigate("/app/report")} className="font-body rounded-xl shadow-sm shadow-primary/10">
               <Search className="mr-2 h-4 w-4" /> Run Vehicle Check
