@@ -3,9 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "react-router-dom";
-import { FileUp, Key, Shield, AlertTriangle, Activity, Zap, Clock, TrendingUp, Upload } from "lucide-react";
+import { FileUp, Key, Shield, AlertTriangle, Activity, Zap, Clock, TrendingUp, Upload, CreditCard } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line } from "recharts";
+import { businessTiers, formatUSD } from "@/config/pricing";
 
 const claimsOverTime = [
   { month: "Jan", verified: 42, flagged: 5 },
