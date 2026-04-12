@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ShieldAlert, Activity, AlertTriangle, Wifi, CheckCircle, ArrowUp, FileText, Clock, TrendingUp } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from "recharts";
+import FraudDetectionPanel from "@/components/FraudDetectionPanel";
 
 const caseTrends = [
   { week: "W1", opened: 5, resolved: 3 },
@@ -197,6 +198,8 @@ const PoliceConsole = () => {
           </Card>
         </motion.div>
       </div>
+
+      <FraudDetectionPanel compact />
 
       <motion.div variants={itemVariants}>
         <Card className="border-border/40 bg-card/70 backdrop-blur-sm">

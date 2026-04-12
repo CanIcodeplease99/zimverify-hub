@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Activity, Database, ShieldCheck, Clock, Users, Settings, Building2, TrendingUp, CheckCircle2 } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, BarChart, Bar } from "recharts";
+import DatabaseIntegrationPanel from "@/components/DatabaseIntegrationPanel";
+import FraudDetectionPanel from "@/components/FraudDetectionPanel";
 
 const uptimeData = [
   { day: "Mon", uptime: 99.98 },
@@ -167,6 +169,10 @@ const GovernmentConsole = () => {
           </CardContent>
         </Card>
       </motion.div>
+
+      <DatabaseIntegrationPanel />
+
+      <FraudDetectionPanel />
 
       <motion.div variants={itemVariants}>
         <Card className="border-border/40 bg-card/70 backdrop-blur-sm">
