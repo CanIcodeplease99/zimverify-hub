@@ -1,0 +1,124 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-display: 'Playfair Display', serif;
+    --font-body: 'Source Sans 3', sans-serif;
+
+    --background: 38 38% 94%;
+    --foreground: 210 10% 15%;
+
+    --card: 38 50% 97%;
+    --card-foreground: 210 10% 15%;
+
+    --popover: 38 50% 97%;
+    --popover-foreground: 210 10% 15%;
+
+    --primary: 182 82% 24%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 35 30% 88%;
+    --secondary-foreground: 210 10% 15%;
+
+    --muted: 35 25% 90%;
+    --muted-foreground: 200 8% 46%;
+
+    --accent: 37 52% 54%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 35 20% 85%;
+    --input: 35 20% 85%;
+    --ring: 182 82% 24%;
+
+    --radius: 0.625rem;
+
+    --sidebar-background: 210 10% 15%;
+    --sidebar-foreground: 38 38% 94%;
+    --sidebar-primary: 182 82% 24%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 8% 22%;
+    --sidebar-accent-foreground: 38 38% 94%;
+    --sidebar-border: 210 8% 25%;
+    --sidebar-ring: 182 82% 24%;
+
+    --success: 160 60% 40%;
+    --success-foreground: 0 0% 100%;
+    --warning: 37 90% 50%;
+    --warning-foreground: 210 10% 15%;
+    --info: 200 70% 50%;
+    --info-foreground: 0 0% 100%;
+  }
+
+  .dark {
+    --background: 210 10% 10%;
+    --foreground: 38 38% 94%;
+    --card: 210 10% 13%;
+    --card-foreground: 38 38% 94%;
+    --popover: 210 10% 13%;
+    --popover-foreground: 38 38% 94%;
+    --primary: 182 82% 28%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 8% 20%;
+    --secondary-foreground: 38 38% 94%;
+    --muted: 210 8% 18%;
+    --muted-foreground: 200 8% 60%;
+    --accent: 37 52% 54%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 8% 22%;
+    --input: 210 8% 22%;
+    --ring: 182 82% 28%;
+    --sidebar-background: 210 10% 8%;
+    --sidebar-foreground: 38 38% 94%;
+    --sidebar-primary: 182 82% 28%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 8% 15%;
+    --sidebar-accent-foreground: 38 38% 94%;
+    --sidebar-border: 210 8% 15%;
+    --sidebar-ring: 182 82% 28%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
