@@ -181,7 +181,8 @@ const AppLogin = () => {
                     type="email"
                     placeholder="user@zimverify.gov.zw"
                     className="mt-1.5 h-12 rounded-xl border-border/60 bg-card/50"
-                    defaultValue="demo@zimverify.gov.zw"
+                    value="demo@zimverify.gov.zw"
+                    readOnly
                     data-testid="demo-email-input"
                   />
                 </div>
@@ -192,7 +193,8 @@ const AppLogin = () => {
                     <Input
                       type={showPassword ? "text" : "password"}
                       className="h-12 rounded-xl border-border/60 bg-card/50 pr-10"
-                      defaultValue="demo1234"
+                      value="demo1234"
+                      readOnly
                       data-testid="demo-password-input"
                     />
                     <button
