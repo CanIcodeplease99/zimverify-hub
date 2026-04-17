@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 import {
   SidebarProvider, SidebarTrigger, Sidebar, SidebarContent, SidebarGroup,
   SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton,
@@ -295,7 +296,18 @@ const AppLayout = () => {
 
             <div className="space-y-3 pt-3 border-t border-border/30">
               <h4 className="font-display font-semibold text-sm text-foreground">Security</h4>
-              <Button variant="outline" className="font-body rounded-xl border-border/40 text-sm w-full justify-start" onClick={() => toast.info("Password reset email sent")}>
+              <Button variant="outline" className="font-body rounded-xl border-border/40 text-sm w-full justify-start" onClick={() => {
+                if (authMode === "supabase") {
+                  supabase.auth.resetPasswordForEmail(user?.email || "", {
+                    redirectTo: `${window.location.origin}/auth/reset-password`,
+                  }).then(({ error }) => {
+                    if (error) toast.error("Failed to send reset email");
+                    else toast.success("Password reset email sent", { description: "Check your inbox." });
+                  });
+                } else {
+                  toast.info("Demo mode — no real password to reset");
+                }
+              }}>
                 <Lock className="h-4 w-4 mr-2" /> Change Password
               </Button>
             </div>

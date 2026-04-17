@@ -8,6 +8,8 @@ import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import AppLogin from "./pages/AppLogin";
+import AuthCallback from "./pages/AuthCallback";
+import ResetPassword from "./pages/ResetPassword";
 import AppLayout from "./components/AppLayout";
 import PublicDashboard from "./pages/PublicDashboard";
 import VehicleReport from "./pages/VehicleReport";
@@ -29,6 +31,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/app/login" element={<AppLogin />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/auth/reset-password" element={<ResetPassword />} />
             <Route path="/app" element={<AppLayout />}>
               <Route path="public" element={<PublicDashboard />} />
               <Route path="report" element={<VehicleReport />} />

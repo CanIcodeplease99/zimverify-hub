@@ -280,6 +280,19 @@ const AppLogin = () => {
                   </div>
                 </div>
 
+                {!isSignUp && (
+                  <div className="text-right">
+                    <button
+                      type="button"
+                      onClick={() => navigate("/auth/reset-password")}
+                      className="text-sm text-primary font-body hover:underline"
+                      data-testid="forgot-password-link"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+                )}
+
                 {isSignUp && (
                   <div>
                     <Label className="font-body text-sm font-medium">Role</Label>
