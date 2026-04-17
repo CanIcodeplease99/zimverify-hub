@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import FraudDetectionPanel from "@/components/FraudDetectionPanel";
+import { useAuth } from "@/contexts/AuthContext";
+import { searchVehicle, logVerification } from "@/services/dataService";
 
 const caseTrends = [
   { week: "W1", opened: 5, resolved: 3 },
@@ -70,6 +72,9 @@ const itemVariants = {
 };
 
 const PoliceConsole = () => {
+  const { authMode, user } = useAuth();
+  const isLive = authMode === "supabase";
+
   const [cases, setCases] = useState(initialCases);
   const [escalateDialogOpen, setEscalateDialogOpen] = useState(false);
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
@@ -149,63 +154,128 @@ const PoliceConsole = () => {
     setNoteDialogOpen(false);
   };
   
-  const handleInterpolCheck = () => {
-    if (!interpolVin.trim() || interpolVin.length < 10) {
+  const handleInterpolCheck = async () => {
+    if (!interpolVin.trim() || interpolVin.length < 5) {
       toast.error("Please enter a valid VIN");
       return;
     }
     
     setInterpolLoading(true);
     
-    // Simulate Interpol database check
-    setTimeout(() => {
-      const flagged = flaggedVehicles.find(v => v.vin.includes(interpolVin.toUpperCase().substring(0, 10)));
-      
-      if (flagged) {
-        setInterpolResult({ found: true, ...flagged, flagDate: "2026-01-15" });
-        toast.error("⚠️ VEHICLE FLAGGED IN INTERPOL DATABASE", {
-          description: `${flagged.make} ${flagged.model} - ${flagged.status}`
+    if (isLive) {
+      // Live: check vehicles table for stolen status
+      const vehicle = await searchVehicle(interpolVin);
+      if (vehicle && vehicle.status === "stolen") {
+        setInterpolResult({ found: true, vin: vehicle.vin, make: vehicle.make, model: vehicle.model, status: "Stolen", country: "Cross-border", flagDate: vehicle.created_at });
+        toast.error("VEHICLE FLAGGED IN DATABASE", {
+          description: `${vehicle.make} ${vehicle.model} - Stolen`
         });
       } else {
         setInterpolResult({ found: false });
-        toast.success("✅ No Interpol flags found", {
+        toast.success("No flags found", {
           description: "Vehicle not in stolen vehicle database"
         });
       }
-      
+      if (user?.id) {
+        logVerification({
+          user_id: user.id,
+          search_type: "interpol_check",
+          search_query: interpolVin,
+          result_found: Boolean(vehicle && vehicle.status === "stolen"),
+          result_data: vehicle ? { vin: vehicle.vin, status: vehicle.status } : {},
+        });
+      }
       setInterpolLoading(false);
-    }, 1500);
+    } else {
+      // Mock Interpol database check
+      setTimeout(() => {
+        const flagged = flaggedVehicles.find(v => v.vin.includes(interpolVin.toUpperCase().substring(0, 10)));
+        
+        if (flagged) {
+          setInterpolResult({ found: true, ...flagged, flagDate: "2026-01-15" });
+          toast.error("VEHICLE FLAGGED IN INTERPOL DATABASE", {
+            description: `${flagged.make} ${flagged.model} - ${flagged.status}`
+          });
+        } else {
+          setInterpolResult({ found: false });
+          toast.success("No Interpol flags found", {
+            description: "Vehicle not in stolen vehicle database"
+          });
+        }
+        
+        setInterpolLoading(false);
+      }, 1500);
+    }
   };
   
-  const handleRegularVinCheck = () => {
-    if (!regularVin.trim() || regularVin.length < 10) {
+  const handleRegularVinCheck = async () => {
+    if (!regularVin.trim() || regularVin.length < 3) {
       toast.error("Please enter a valid VIN or Registration Number");
       return;
     }
     
     setRegularLoading(true);
     
-    // Simulate national database check
-    setTimeout(() => {
-      const vehicle = nationalVehicles.find(v => 
-        v.vin.includes(regularVin.toUpperCase().substring(0, 10)) || 
-        v.registration.toUpperCase().includes(regularVin.toUpperCase())
-      );
-      
+    if (isLive) {
+      // Live Supabase search
+      const vehicle = await searchVehicle(regularVin);
       if (vehicle) {
-        setRegularResult({ found: true, ...vehicle });
-        toast.success("✅ Vehicle found in national database", {
+        setRegularResult({
+          found: true,
+          vin: vehicle.vin,
+          registration: vehicle.registration,
+          make: vehicle.make,
+          model: vehicle.model,
+          year: vehicle.year,
+          color: vehicle.color,
+          owner: vehicle.owner_name,
+          importDate: vehicle.created_at,
+          port: "N/A",
+          customsEntry: "N/A",
+        });
+        toast.success("Vehicle found in Supabase database", {
           description: `${vehicle.make} ${vehicle.model} - ${vehicle.registration}`
         });
       } else {
         setRegularResult({ found: false });
         toast.warning("Vehicle not found", {
-          description: "No matching vehicle in national database"
+          description: "No matching vehicle in database"
         });
       }
-      
+      // Log the verification
+      if (user?.id) {
+        logVerification({
+          user_id: user.id,
+          search_type: "national_vin_check",
+          search_query: regularVin,
+          result_found: Boolean(vehicle),
+          result_data: vehicle ? { vin: vehicle.vin, make: vehicle.make } : {},
+        });
+      }
       setRegularLoading(false);
-    }, 1000);
+    } else {
+      // Mock database check
+      setTimeout(() => {
+        const vehicle = nationalVehicles.find(v => 
+          v.vin.includes(regularVin.toUpperCase().substring(0, 10)) || 
+          v.registration.toUpperCase().includes(regularVin.toUpperCase())
+        );
+        
+        if (vehicle) {
+          setRegularResult({ found: true, ...vehicle });
+          toast.success("Vehicle found in national database", {
+            description: `${vehicle.make} ${vehicle.model} - ${vehicle.registration}`
+          });
+        } else {
+          setRegularResult({ found: false });
+          toast.warning("Vehicle not found", {
+            description: "No matching vehicle in national database"
+          });
+        }
+        
+        setRegularLoading(false);
+      }, 1000);
+    }
   };
 
   return (

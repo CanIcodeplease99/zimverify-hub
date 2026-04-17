@@ -73,7 +73,7 @@ const mockNotifications = [
 ];
 
 const AppLayout = () => {
-  const { role, userName, logout, isAuthenticated } = useAuth();
+  const { role, userName, logout, isAuthenticated, authMode, user, profile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const navItems = roleNavItems[role];
@@ -228,7 +228,7 @@ const AppLayout = () => {
                   <DropdownMenuContent align="end" className="w-56">
                     <div className="px-3 py-2">
                       <p className="font-display font-semibold text-sm">{userName}</p>
-                      <p className="text-xs text-muted-foreground font-body">{roleBadgeLabels[role]} Account</p>
+                      <p className="text-xs text-muted-foreground font-body">{roleBadgeLabels[role]} Account {authMode === "demo" ? "(Demo)" : ""}</p>
                     </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => setSettingsOpen(true)} className="cursor-pointer">
@@ -270,7 +270,7 @@ const AppLayout = () => {
                 </div>
                 <div>
                   <Label className="font-body text-xs">Email</Label>
-                  <Input defaultValue="demo@zimverify.gov.zw" className="mt-1 rounded-xl border-border/60 text-sm" />
+                  <Input defaultValue={authMode === "supabase" && user?.email ? user.email : "demo@zimverify.gov.zw"} className="mt-1 rounded-xl border-border/60 text-sm" readOnly={authMode === "supabase"} />
                 </div>
               </div>
             </div>
