@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
+import { useRealtime } from "@/contexts/RealtimeContext";
 import { supabase } from "@/lib/supabase";
 import {
   SidebarProvider, SidebarTrigger, Sidebar, SidebarContent, SidebarGroup,
@@ -67,21 +68,22 @@ const roleBadgeColors: Record<UserRole, string> = {
   customs: "bg-destructive/10 text-destructive border-destructive/20",
 };
 
-const mockNotifications = [
-  { title: "Vehicle check complete", desc: "ABC 1234 ZW — Clear", time: "5 min ago", read: false },
-  { title: "New fraud alert", desc: "Cloned plate detected — HRE 4421 ZW", time: "1 hr ago", read: false },
-  { title: "System update", desc: "Scheduled maintenance Apr 15, 02:00", time: "3 hrs ago", read: true },
-];
+const severityColors: Record<string, string> = {
+  info: "bg-info/10 text-info",
+  warning: "bg-warning/10 text-warning",
+  error: "bg-destructive/10 text-destructive",
+  success: "bg-success/10 text-success",
+};
 
 const AppLayout = () => {
   const { role, userName, logout, isAuthenticated, authMode, user, profile } = useAuth();
+  const { notifications, unreadCount, markAllRead, markRead, isConnected } = useRealtime();
   const navigate = useNavigate();
   const location = useLocation();
   const navItems = roleNavItems[role];
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [notifications, setNotifications] = useState(mockNotifications);
   const [emailNotifs, setEmailNotifs] = useState(true);
   const [pushNotifs, setPushNotifs] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
@@ -91,10 +93,8 @@ const AppLayout = () => {
     return <Navigate to="/app/login" replace />;
   }
 
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  const markAllRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const handleMarkAllRead = () => {
+    markAllRead();
     toast.success("All notifications marked as read");
   };
 
@@ -181,34 +181,59 @@ const AppLayout = () => {
                 />
               </div>
               <div className="flex items-center gap-3 ml-auto">
+                {/* Realtime connection indicator */}
+                {authMode === "supabase" && (
+                  <div className="flex items-center gap-1.5" data-testid="realtime-status">
+                    <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-success animate-pulse" : "bg-muted-foreground/30"}`} />
+                    <span className="text-xs text-muted-foreground font-body hidden sm:inline">
+                      {isConnected ? "Live" : "Offline"}
+                    </span>
+                  </div>
+                )}
+
                 {/* Notifications */}
                 <DropdownMenu open={notifOpen} onOpenChange={setNotifOpen}>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="relative rounded-lg">
+                    <Button variant="ghost" size="icon" className="relative rounded-lg" data-testid="notification-bell">
                       <Bell className="h-4 w-4" />
-                      {unreadCount > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-destructive" />}
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center px-1">
+                          {unreadCount > 9 ? "9+" : unreadCount}
+                        </span>
+                      )}
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-80">
-                    <div className="flex items-center justify-between px-3 py-2">
+                  <DropdownMenuContent align="end" className="w-96 max-h-[400px] overflow-y-auto">
+                    <div className="flex items-center justify-between px-3 py-2 sticky top-0 bg-popover z-10">
                       <p className="font-display font-semibold text-sm">Notifications</p>
                       {unreadCount > 0 && (
-                        <Button variant="ghost" size="sm" className="text-xs font-body text-primary h-auto py-0.5" onClick={markAllRead}>Mark all read</Button>
+                        <Button variant="ghost" size="sm" className="text-xs font-body text-primary h-auto py-0.5" onClick={handleMarkAllRead}>Mark all read</Button>
                       )}
                     </div>
                     <DropdownMenuSeparator />
-                    {notifications.map((n, i) => (
-                      <DropdownMenuItem key={i} className="flex-col items-start gap-0.5 cursor-pointer" onClick={() => {
-                        setNotifications(prev => prev.map((notif, idx) => idx === i ? { ...notif, read: true } : notif));
-                      }}>
-                        <div className="flex items-center gap-2 w-full">
-                          {!n.read && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
-                          <span className={`font-body text-sm ${!n.read ? "font-semibold" : ""}`}>{n.title}</span>
-                        </div>
-                        <span className="text-xs text-muted-foreground font-body pl-3.5">{n.desc}</span>
-                        <span className="text-xs text-muted-foreground/60 font-body pl-3.5">{n.time}</span>
-                      </DropdownMenuItem>
-                    ))}
+                    {notifications.length === 0 ? (
+                      <div className="px-3 py-6 text-center text-muted-foreground font-body text-sm">
+                        No notifications yet
+                      </div>
+                    ) : (
+                      notifications.map((n) => (
+                        <DropdownMenuItem
+                          key={n.id}
+                          className="flex-col items-start gap-0.5 cursor-pointer px-3 py-2.5"
+                          onClick={() => markRead(n.id)}
+                        >
+                          <div className="flex items-center gap-2 w-full">
+                            {!n.read && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+                            <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-body ${severityColors[n.severity] || ""}`}>
+                              {n.type}
+                            </span>
+                            <span className={`font-body text-sm flex-1 ${!n.read ? "font-semibold" : ""}`}>{n.title}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground font-body pl-3.5">{n.desc}</span>
+                          <span className="text-xs text-muted-foreground/60 font-body pl-3.5">{n.time}</span>
+                        </DropdownMenuItem>
+                      ))
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
 

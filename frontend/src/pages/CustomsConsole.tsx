@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,11 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Truck, Database, CheckCircle2, TrendingUp, FileText, Plus, Loader2 } from "lucide-react";
+import { Truck, Database, CheckCircle2, TrendingUp, FileText, Plus, Loader2, Wifi } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRealtime } from "@/contexts/RealtimeContext";
 import { fetchCustomsEntries, createCustomsEntry, fetchCustomsKPIs } from "@/services/dataService";
+import { supabase } from "@/lib/supabase";
 import type { CustomsEntry } from "@/lib/database.types";
 
 const mockKpis = [
@@ -49,6 +51,7 @@ const itemVariants = {
 
 const CustomsConsole = () => {
   const { authMode, user } = useAuth();
+  const { isConnected } = useRealtime();
   const isLive = authMode === "supabase";
 
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -71,6 +74,16 @@ const CustomsConsole = () => {
     registrationNumber: "",
   });
 
+  const refreshData = useCallback(() => {
+    if (!isLive) return;
+    Promise.all([fetchCustomsEntries(), fetchCustomsKPIs()])
+      .then(([e, k]) => {
+        setEntries(e);
+        setLiveKpis(k);
+      })
+      .catch(() => {});
+  }, [isLive]);
+
   useEffect(() => {
     if (!isLive) return;
     setLoadingData(true);
@@ -82,6 +95,21 @@ const CustomsConsole = () => {
       .catch(() => toast.error("Failed to load data"))
       .finally(() => setLoadingData(false));
   }, [isLive]);
+
+  // Auto-refresh when customs_entries table changes via Realtime
+  useEffect(() => {
+    if (!isLive) return;
+    const channel = supabase
+      .channel("customs-console-refresh")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "customs_entries" },
+        () => refreshData()
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [isLive, refreshData]);
 
   const kpis = isLive && liveKpis
     ? [
@@ -163,8 +191,8 @@ const CustomsConsole = () => {
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-display font-bold text-foreground">Customs Console (ZIMRA)</h1>
             {isLive && (
-              <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-xs font-body" data-testid="live-badge">
-                Live
+              <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-xs font-body gap-1" data-testid="live-badge">
+                {isConnected && <Wifi className="h-3 w-3" />} Live
               </Badge>
             )}
             {!isLive && (
