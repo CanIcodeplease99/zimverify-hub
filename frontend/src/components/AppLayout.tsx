@@ -90,8 +90,13 @@ const AppLayout = () => {
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    return <Navigate to="/app/login" replace />;
+    // Check if the current path is an official route
+    const officialPaths = ["/app/police", "/app/government", "/app/customs", "/app/insurance", "/app/partners"];
+    const isOfficialRoute = officialPaths.some(p => location.pathname.startsWith(p));
+    return <Navigate to={isOfficialRoute ? "/app/official/login" : "/app/login"} replace />;
   }
+
+  const logoutRoute = role === "public" ? "/app/login" : "/app/official/login";
 
   const handleMarkAllRead = () => {
     markAllRead();
@@ -153,7 +158,7 @@ const AppLayout = () => {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton
-                      onClick={() => { logout(); navigate("/app/login"); }}
+                      onClick={() => { logout(); navigate(logoutRoute); }}
                       className="text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 rounded-lg"
                     >
                       <LogOut className="h-5 w-5 mr-3 shrink-0" />
@@ -264,7 +269,7 @@ const AppLayout = () => {
                       <HelpCircle className="h-4 w-4 mr-2" /> Help & Support
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => { logout(); navigate("/app/login"); }} className="cursor-pointer text-destructive">
+                    <DropdownMenuItem onClick={() => { logout(); navigate(logoutRoute); }} className="cursor-pointer text-destructive">
                       <LogOut className="h-4 w-4 mr-2" /> Sign Out
                     </DropdownMenuItem>
                   </DropdownMenuContent>

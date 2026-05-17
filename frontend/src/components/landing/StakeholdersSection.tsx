@@ -19,7 +19,11 @@ const StakeholdersSection = () => {
   const bgY = useTransform(scrollYProgress, [0, 1], [0, -80]);
 
   const handleTileClick = (role: string) => {
-    navigate('/app/login', { state: { preselectedRole: role } });
+    if (role === "public") {
+      navigate('/app/login');
+    } else {
+      navigate('/app/official/login');
+    }
   };
 
   return (
