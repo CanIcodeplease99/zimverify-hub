@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import type { Vehicle, CustomsEntry, VerificationLog } from "@/lib/database.types";
+import type { Vehicle, CustomsEntry, VerificationLog, Profile } from "@/lib/database.types";
 
 // --- Vehicles ---
 
@@ -138,5 +138,74 @@ export async function fetchCustomsKPIs(): Promise<{
     totalMonth: total,
     processedRate: Math.round(processed * 10) / 10,
     pendingReview: pending,
+  };
+}
+
+// --- Admin: Profiles ---
+
+export async function fetchAllProfiles(): Promise<Profile[]> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("fetchAllProfiles error:", error.message);
+    return [];
+  }
+  return (data ?? []) as Profile[];
+}
+
+// --- Admin: Update Vehicle Status ---
+
+export async function updateVehicleStatus(vin: string, status: string): Promise<{ error: string | null }> {
+  const { error } = await supabase
+    .from("vehicles")
+    .update({ status })
+    .eq("vin", vin);
+
+  if (error) return { error: error.message };
+  return { error: null };
+}
+
+// --- Admin: All Verification Logs ---
+
+export async function fetchAllVerificationLogs(): Promise<VerificationLog[]> {
+  const { data, error } = await supabase
+    .from("verification_logs")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) {
+    console.error("fetchAllVerificationLogs error:", error.message);
+    return [];
+  }
+  return (data ?? []) as VerificationLog[];
+}
+
+// --- Admin: System Stats ---
+
+export async function fetchSystemStats(): Promise<{
+  totalVehicles: number;
+  stolenVehicles: number;
+  totalUsers: number;
+  totalEntries: number;
+  totalVerifications: number;
+}> {
+  const [veh, stolen, users, entries, verif] = await Promise.all([
+    supabase.from("vehicles").select("id", { count: "exact", head: true }),
+    supabase.from("vehicles").select("id", { count: "exact", head: true }).eq("status", "stolen"),
+    supabase.from("profiles").select("id", { count: "exact", head: true }),
+    supabase.from("customs_entries").select("id", { count: "exact", head: true }),
+    supabase.from("verification_logs").select("id", { count: "exact", head: true }),
+  ]);
+
+  return {
+    totalVehicles: veh.count ?? 0,
+    stolenVehicles: stolen.count ?? 0,
+    totalUsers: users.count ?? 0,
+    totalEntries: entries.count ?? 0,
+    totalVerifications: verif.count ?? 0,
   };
 }
