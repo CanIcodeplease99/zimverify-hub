@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation, Navigate } from "react-router-dom";
-import { useAuth, UserRole } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useRealtime } from "@/contexts/RealtimeContext";
 import { supabase } from "@/lib/supabase";
+import { detectPortalFromPath, getPortalLoginRoute, ROLE_LABELS, getDashboardRoute, isRoleAllowedInPortal } from "@/lib/rbac";
+import type { UserRole } from "@/lib/rbac";
 import {
   SidebarProvider, SidebarTrigger, Sidebar, SidebarContent, SidebarGroup,
   SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton,
@@ -24,48 +26,56 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const roleNavItems: Record<UserRole, { title: string; url: string; icon: typeof LayoutDashboard }[]> = {
-  public: [
+  PUBLIC_USER: [
     { title: "Dashboard", url: "/app/public", icon: LayoutDashboard },
     { title: "Vehicle Search", url: "/app/report", icon: Search },
   ],
-  police: [
+  POLICE_OFFICER: [
     { title: "Console", url: "/app/police", icon: ShieldCheck },
     { title: "Vehicle Search", url: "/app/report", icon: Search },
   ],
-  government: [
-    { title: "Console", url: "/app/government", icon: Landmark },
+  POLICE_SUPERVISOR: [
+    { title: "Console", url: "/app/police", icon: ShieldCheck },
     { title: "Vehicle Search", url: "/app/report", icon: Search },
   ],
-  insurance: [
-    { title: "Portal", url: "/app/insurance", icon: Building2 },
-    { title: "Vehicle Search", url: "/app/report", icon: Search },
-  ],
-  partner: [
-    { title: "Portal", url: "/app/partners", icon: Handshake },
-    { title: "Vehicle Search", url: "/app/report", icon: Search },
-  ],
-  customs: [
+  CUSTOMS_OFFICER: [
     { title: "Customs Console", url: "/app/customs", icon: ShieldCheck },
     { title: "Vehicle Search", url: "/app/report", icon: Search },
   ],
+  ZINARA_OFFICER: [
+    { title: "Dashboard", url: "/app/government", icon: Landmark },
+    { title: "Vehicle Search", url: "/app/report", icon: Search },
+  ],
+  REGISTRY_OFFICER: [
+    { title: "Dashboard", url: "/app/government", icon: Landmark },
+    { title: "Vehicle Search", url: "/app/report", icon: Search },
+  ],
+  GOV_ADMIN: [
+    { title: "Admin Console", url: "/app/government", icon: Landmark },
+    { title: "Customs", url: "/app/customs", icon: ShieldCheck },
+    { title: "Vehicle Search", url: "/app/report", icon: Search },
+  ],
+  INSURANCE_AGENT: [
+    { title: "Portal", url: "/app/insurance", icon: Building2 },
+    { title: "Vehicle Search", url: "/app/report", icon: Search },
+  ],
+  INSURANCE_MANAGER: [
+    { title: "Portal", url: "/app/insurance", icon: Building2 },
+    { title: "Partners", url: "/app/partners", icon: Handshake },
+    { title: "Vehicle Search", url: "/app/report", icon: Search },
+  ],
 };
 
-const roleBadgeLabels: Record<UserRole, string> = {
-  public: "Public",
-  police: "Police",
-  government: "Government",
-  insurance: "Insurance",
-  partner: "Partner",
-  customs: "Customs (ZIMRA)",
-};
-
-const roleBadgeColors: Record<UserRole, string> = {
-  public: "bg-primary/10 text-primary border-primary/20",
-  police: "bg-info/10 text-info border-info/20",
-  government: "bg-accent/10 text-accent border-accent/20",
-  insurance: "bg-success/10 text-success border-success/20",
-  partner: "bg-warning/10 text-warning border-warning/20",
-  customs: "bg-destructive/10 text-destructive border-destructive/20",
+const roleBadgeColors: Record<string, string> = {
+  PUBLIC_USER: "bg-primary/10 text-primary border-primary/20",
+  POLICE_OFFICER: "bg-info/10 text-info border-info/20",
+  POLICE_SUPERVISOR: "bg-info/10 text-info border-info/20",
+  CUSTOMS_OFFICER: "bg-destructive/10 text-destructive border-destructive/20",
+  ZINARA_OFFICER: "bg-accent/10 text-accent border-accent/20",
+  REGISTRY_OFFICER: "bg-accent/10 text-accent border-accent/20",
+  GOV_ADMIN: "bg-accent/10 text-accent border-accent/20",
+  INSURANCE_AGENT: "bg-success/10 text-success border-success/20",
+  INSURANCE_MANAGER: "bg-warning/10 text-warning border-warning/20",
 };
 
 const severityColors: Record<string, string> = {
@@ -76,11 +86,11 @@ const severityColors: Record<string, string> = {
 };
 
 const AppLayout = () => {
-  const { role, userName, logout, isAuthenticated, authMode, user, profile } = useAuth();
+  const { role, userName, logout, isAuthenticated, authMode, user, portal, can } = useAuth();
   const { notifications, unreadCount, markAllRead, markRead, isConnected } = useRealtime();
   const navigate = useNavigate();
   const location = useLocation();
-  const navItems = roleNavItems[role];
+  const navItems = roleNavItems[role] || roleNavItems.PUBLIC_USER;
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -88,15 +98,19 @@ const AppLayout = () => {
   const [pushNotifs, setPushNotifs] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
 
-  // Redirect to login if not authenticated
+  // Redirect to appropriate portal login if not authenticated
   if (!isAuthenticated) {
-    // Check if the current path is an official route
-    const officialPaths = ["/app/police", "/app/government", "/app/customs", "/app/insurance", "/app/partners"];
-    const isOfficialRoute = officialPaths.some(p => location.pathname.startsWith(p));
-    return <Navigate to={isOfficialRoute ? "/app/official/login" : "/app/login"} replace />;
+    const detectedPortal = detectPortalFromPath(location.pathname);
+    return <Navigate to={getPortalLoginRoute(detectedPortal)} replace />;
   }
 
-  const logoutRoute = role === "public" ? "/app/login" : "/app/official/login";
+  // Portal enforcement: check if user's role belongs to the portal they're trying to access
+  const currentPortal = detectPortalFromPath(location.pathname);
+  if (currentPortal !== "public" && !isRoleAllowedInPortal(role, currentPortal)) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  const logoutRoute = getPortalLoginRoute(portal);
 
   const handleMarkAllRead = () => {
     markAllRead();
@@ -242,8 +256,8 @@ const AppLayout = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                <Badge variant="outline" className={`font-body text-xs rounded-lg ${roleBadgeColors[role]}`}>
-                  {roleBadgeLabels[role]}
+                <Badge variant="outline" className={`font-body text-xs rounded-lg ${roleBadgeColors[role] || ""}`}>
+                  {ROLE_LABELS[role]}
                 </Badge>
 
                 {/* Profile dropdown */}
@@ -259,7 +273,7 @@ const AppLayout = () => {
                   <DropdownMenuContent align="end" className="w-56">
                     <div className="px-3 py-2">
                       <p className="font-display font-semibold text-sm">{userName}</p>
-                      <p className="text-xs text-muted-foreground font-body">{roleBadgeLabels[role]} Account {authMode === "demo" ? "(Demo)" : ""}</p>
+                      <p className="text-xs text-muted-foreground font-body">{ROLE_LABELS[role]} {authMode === "demo" ? "(Demo)" : ""}</p>
                     </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => setSettingsOpen(true)} className="cursor-pointer">

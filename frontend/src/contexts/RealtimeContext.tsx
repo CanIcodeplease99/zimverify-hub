@@ -184,10 +184,10 @@ export const RealtimeProvider = ({ children }: { children: ReactNode }) => {
     const channels: RealtimeChannel[] = [];
 
     // Subscribe based on role
-    const shouldListenCustoms = ["customs", "government", "police"].includes(role);
+    const shouldListenCustoms = ["CUSTOMS_OFFICER", "GOV_ADMIN", "POLICE_OFFICER", "POLICE_SUPERVISOR"].includes(role);
     const shouldListenVehicles = true; // all roles
-    const shouldListenVerification = ["police", "government"].includes(role);
-    const shouldListenPolice = ["police", "government"].includes(role);
+    const shouldListenVerification = ["POLICE_OFFICER", "POLICE_SUPERVISOR", "GOV_ADMIN"].includes(role);
+    const shouldListenPolice = ["POLICE_OFFICER", "POLICE_SUPERVISOR", "GOV_ADMIN"].includes(role);
 
     if (shouldListenCustoms) {
       const ch = supabase

@@ -18,12 +18,9 @@ const StakeholdersSection = () => {
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start end", "end start"] });
   const bgY = useTransform(scrollYProgress, [0, 1], [0, -80]);
 
-  const handleTileClick = (role: string) => {
-    if (role === "public") {
-      navigate('/app/login');
-    } else {
-      navigate('/app/official/login');
-    }
+  const handleTileClick = (_role: string) => {
+    // All public site links go to public login only — no internal portal exposure
+    navigate('/app/login');
   };
 
   return (

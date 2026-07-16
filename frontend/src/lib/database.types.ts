@@ -1,10 +1,10 @@
-export type UserRole = "public" | "police" | "government" | "insurance" | "partner" | "customs";
+export type { UserRole, PortalType, Permission } from "./rbac";
 
 export interface Profile {
   id: string;
   email: string;
   full_name: string;
-  role: UserRole;
+  role: string;
   created_at: string;
 }
 
