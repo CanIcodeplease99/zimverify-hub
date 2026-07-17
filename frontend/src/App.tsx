@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { RealtimeProvider } from "@/contexts/RealtimeContext";
 import { PWAInstallBanner } from "@/components/PWAInstallBanner";
+import PortalGuard from "./components/PortalGuard";
+import SubdomainRedirect from "./components/SubdomainRedirect";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import AppLogin from "./pages/AppLogin";
@@ -35,22 +37,29 @@ const App = () => (
           <BrowserRouter>
             <PWAInstallBanner />
             <Routes>
-              {/* Public */}
-              <Route path="/" element={<Index />} />
+              {/* Root: subdomain-aware — auto-redirects portal subdomains */}
+              <Route path="/" element={<SubdomainRedirect fallback={<Index />} />} />
+
+              {/* Public routes — accessible on main domain only */}
               <Route path="/app/login" element={<AppLogin />} />
               <Route path="/check" element={<AppLogin />} />
 
-              {/* Secure portal logins */}
-              <Route path="/portal/police/login" element={<PoliceLogin />} />
-              <Route path="/portal/gov/login" element={<GovLogin />} />
-              <Route path="/portal/insurance/login" element={<InsuranceLogin />} />
+              {/* Police portal — guarded: only accessible from police subdomain or dev */}
+              <Route path="/portal/police/login" element={<PortalGuard portal="police"><PoliceLogin /></PortalGuard>} />
+              <Route path="/login" element={<PortalGuard portal="police"><PoliceLogin /></PortalGuard>} />
+
+              {/* Government portal — guarded */}
+              <Route path="/portal/gov/login" element={<PortalGuard portal="government"><GovLogin /></PortalGuard>} />
+
+              {/* Insurance portal — guarded */}
+              <Route path="/portal/insurance/login" element={<PortalGuard portal="insurance"><InsuranceLogin /></PortalGuard>} />
 
               {/* Auth flows */}
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/auth/reset-password" element={<ResetPassword />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
 
-              {/* Protected app routes */}
+              {/* Protected dashboards — AppLayout handles auth + portal enforcement */}
               <Route path="/app" element={<AppLayout />}>
                 <Route path="public" element={<PublicDashboard />} />
                 <Route path="report" element={<VehicleReport />} />
@@ -61,6 +70,7 @@ const App = () => (
                 <Route path="customs" element={<CustomsConsole />} />
               </Route>
 
+              <Route path="/not-found" element={<NotFound />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
