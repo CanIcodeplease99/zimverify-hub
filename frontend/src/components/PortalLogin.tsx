@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Shield, ShieldCheck, Eye, EyeOff, ChevronRight, ArrowLeft, UserPlus, LogIn, Lock, Fingerprint } from "lucide-react";
+import { Shield, ShieldCheck, Eye, EyeOff, ChevronRight, ArrowLeft, UserPlus, LogIn, Lock, Fingerprint, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,16 +11,17 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import heroCity from "@/assets/hero-city.jpg";
 import type { PortalType, UserRole } from "@/lib/rbac";
-import { PORTAL_ROLES, isRoleAllowedInPortal, getDashboardRoute, ROLE_PORTAL_MAP } from "@/lib/rbac";
+import { PORTAL_ROLES, isRoleAllowedInPortal, getDashboardRoute } from "@/lib/rbac";
 
 interface PortalLoginProps {
   portalType: PortalType;
   title: string;
   subtitle: string;
   accentColor: string;
+  warningText?: string;
 }
 
-const PortalLogin = ({ portalType, title, subtitle, accentColor }: PortalLoginProps) => {
+const PortalLogin = ({ portalType, title, subtitle, accentColor, warningText }: PortalLoginProps) => {
   const roles = PORTAL_ROLES[portalType];
   const [selectedRole, setSelectedRole] = useState<UserRole>(roles[0].role);
   const [showPassword, setShowPassword] = useState(false);
@@ -91,9 +92,28 @@ const PortalLogin = ({ portalType, title, subtitle, accentColor }: PortalLoginPr
               <Badge variant="outline" className="ml-2 text-xs font-body bg-destructive/10 text-destructive border-destructive/20">{title}</Badge>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground font-body mb-6 flex items-center gap-1.5">
+          <p className="text-xs text-muted-foreground font-body mb-4 flex items-center gap-1.5">
             <Lock className="h-3 w-3" /> {subtitle}
           </p>
+
+          {warningText && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.3 }}
+              className="mb-6 p-4 rounded-xl bg-destructive/8 border-2 border-destructive/30 relative overflow-hidden"
+              data-testid="warning-banner"
+            >
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-destructive" />
+              <div className="flex gap-3 pl-2">
+                <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-display font-bold text-destructive text-sm uppercase tracking-wide mb-1">Warning — Restricted System</p>
+                  <p className="text-xs text-destructive/80 font-body leading-relaxed">{warningText}</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           <div className="flex gap-2 mb-6" data-testid="auth-mode-toggle">
             <Button variant={isDemo ? "default" : "outline"} size="sm" onClick={() => setAuthMode("demo")} className="font-body rounded-xl flex-1" data-testid="demo-mode-btn">Demo Mode</Button>
