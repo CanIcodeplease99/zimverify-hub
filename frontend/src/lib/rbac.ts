@@ -74,6 +74,9 @@ export type Permission =
   | "page:gov_admin"
   | "page:insurance_portal"
   | "page:partner_portal"
+  | "page:traffic_fines"
+  | "page:traffic_enforcement"
+  | "page:traffic_compliance_admin"
   | "action:search_vehicle"
   | "action:search_interpol"
   | "action:register_import"
@@ -86,37 +89,52 @@ export type Permission =
   | "action:system_config"
   | "action:view_audit_log"
   | "action:create_api_token"
-  | "action:bulk_upload";
+  | "action:bulk_upload"
+  | "action:pay_fine"
+  | "action:submit_appeal"
+  | "action:review_offence"
+  | "action:issue_fine"
+  | "action:adjudicate_appeal"
+  | "action:manage_rules_engine";
 
 // --- Role -> Permissions ---
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   PUBLIC_USER: [
     "page:dashboard",
     "page:vehicle_search",
+    "page:traffic_fines",
     "action:search_vehicle",
     "action:print_report",
+    "action:pay_fine",
+    "action:submit_appeal",
   ],
   POLICE_OFFICER: [
     "page:dashboard",
     "page:police_console",
     "page:vehicle_search",
     "page:interpol_check",
+    "page:traffic_enforcement",
     "action:search_vehicle",
     "action:search_interpol",
     "action:escalate_case",
     "action:print_report",
+    "action:review_offence",
+    "action:issue_fine",
   ],
   POLICE_SUPERVISOR: [
     "page:dashboard",
     "page:police_console",
     "page:vehicle_search",
     "page:interpol_check",
+    "page:traffic_enforcement",
     "action:search_vehicle",
     "action:search_interpol",
     "action:escalate_case",
     "action:export_data",
     "action:print_report",
     "action:view_audit_log",
+    "action:review_offence",
+    "action:issue_fine",
   ],
   CUSTOMS_OFFICER: [
     "page:dashboard",
@@ -146,6 +164,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "page:gov_admin",
     "page:customs_console",
     "page:vehicle_search",
+    "page:traffic_compliance_admin",
     "action:search_vehicle",
     "action:register_import",
     "action:edit_vehicle_status",
@@ -154,6 +173,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "action:manage_users",
     "action:system_config",
     "action:view_audit_log",
+    "action:adjudicate_appeal",
+    "action:manage_rules_engine",
   ],
   INSURANCE_AGENT: [
     "page:dashboard",
